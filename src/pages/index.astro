@@ -1,0 +1,61 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCarouselItems, getNetflixTopItems } from '../lib/supabase';
+
+let carouselCount = 0;
+let netflixCount = 0;
+let error = '';
+
+try {
+  const [carousel, netflix] = await Promise.all([
+    getCarouselItems(),
+    getNetflixTopItems(),
+  ]);
+  carouselCount = carousel.length;
+  netflixCount = netflix.length;
+} catch (e: any) {
+  error = e.message;
+}
+---
+
+<Layout title="Dashboard">
+  {error && (
+    <div class="mb-6 rounded-lg bg-red-900/40 border border-red-700 px-4 py-3 text-red-300 text-sm">
+      ⚠️ Failed to load data: {error}
+    </div>
+  )}
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl">
+    <!-- Carousel card -->
+    <a href="/carousel" class="group block rounded-xl bg-gray-900 border border-gray-800 hover:border-indigo-500 transition-colors p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div class="text-3xl">🎠</div>
+        <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Manage</span>
+      </div>
+      <p class="text-4xl font-bold text-white mb-1">{carouselCount}</p>
+      <p class="text-sm text-gray-400">Carousel Items</p>
+      <p class="text-xs text-indigo-400 mt-3 group-hover:text-indigo-300">View & edit →</p>
+    </a>
+
+    <!-- Netflix Top card -->
+    <a href="/netflix-top" class="group block rounded-xl bg-gray-900 border border-gray-800 hover:border-red-500 transition-colors p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div class="text-3xl">🔥</div>
+        <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Manage</span>
+      </div>
+      <p class="text-4xl font-bold text-white mb-1">{netflixCount}</p>
+      <p class="text-sm text-gray-400">Netflix Top Items</p>
+      <p class="text-xs text-red-400 mt-3 group-hover:text-red-300">View & edit →</p>
+    </a>
+  </div>
+
+  <div class="mt-10 rounded-xl bg-gray-900 border border-gray-800 p-6 max-w-2xl">
+    <h2 class="text-sm font-semibold text-gray-300 mb-3">Quick tips</h2>
+    <ul class="space-y-2 text-sm text-gray-500">
+      <li>• Click <span class="text-gray-300">Carousel</span> or <span class="text-gray-300">Netflix Top</span> in the sidebar to manage items.</li>
+      <li>• Use the <span class="text-gray-300">Search TMDB</span> button to find movies/shows by title and add them instantly.</li>
+      <li>• Click the <span class="text-gray-300">Replace</span> button on any item to swap it with a different TMDB title.</li>
+      <li>• All changes are saved directly to Supabase in real time.</li>
+    </ul>
+  </div>
+</Layout>
