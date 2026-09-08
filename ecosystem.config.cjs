@@ -23,7 +23,7 @@ module.exports = {
       env_production: {
         NODE_ENV: 'production',
         HOST: '127.0.0.1',
-        PORT: 4321,
+        PORT: 4232,
         SUPABASE_URL: 'https://hdzvzwoutvvjvxysyltm.supabase.co',
         SUPABASE_ANON_KEY:
           'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkenZ6d291dHZ2anZ4eXN5bHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0NzU2MjIsImV4cCI6MjEwNDA1MTYyMn0.vf8BDWfro1feSJRUYiBZBRWVgUaUSVMmqjvFUxn2LkQ',
