@@ -1,8 +1,8 @@
 import type { APIRoute } from 'astro';
 import {
-  addNetflixTopItem,
-  updateNetflixTopItem,
-  deleteNetflixTopItem,
+  addNetflixTopShowItem,
+  updateNetflixTopShowItem,
+  deleteNetflixTopShowItem,
 } from '../../lib/supabase';
 
 const VALID_TYPES = new Set(['movie', 'tv']);
@@ -23,7 +23,7 @@ export const POST: APIRoute = async ({ request }) => {
     const { tmdb_id, type } = body ?? {};
     if (!isValidTmdbId(tmdb_id)) return json({ error: 'tmdb_id must be a positive integer' }, 400);
     if (!VALID_TYPES.has(type)) return json({ error: 'type must be "movie" or "tv"' }, 400);
-    const data = await addNetflixTopItem(tmdb_id, type);
+    const data = await addNetflixTopShowItem(tmdb_id, type);
     return json(data, 201);
   } catch (e: any) {
     return json({ error: e.message }, 500);
@@ -37,7 +37,7 @@ export const PATCH: APIRoute = async ({ request }) => {
     if (!isValidId(id)) return json({ error: 'id must be a positive integer' }, 400);
     if (!isValidTmdbId(tmdb_id)) return json({ error: 'tmdb_id must be a positive integer' }, 400);
     if (!VALID_TYPES.has(type)) return json({ error: 'type must be "movie" or "tv"' }, 400);
-    const data = await updateNetflixTopItem(id, tmdb_id, type);
+    const data = await updateNetflixTopShowItem(id, tmdb_id, type);
     return json(data, 200);
   } catch (e: any) {
     return json({ error: e.message }, 500);
@@ -49,7 +49,7 @@ export const DELETE: APIRoute = async ({ request }) => {
     const body = await request.json();
     const { id } = body ?? {};
     if (!isValidId(id)) return json({ error: 'id must be a positive integer' }, 400);
-    await deleteNetflixTopItem(id);
+    await deleteNetflixTopShowItem(id);
     return json({ success: true }, 200);
   } catch (e: any) {
     return json({ error: e.message }, 500);

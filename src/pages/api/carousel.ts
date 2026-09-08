@@ -5,10 +5,24 @@ import {
   deleteCarouselItem,
 } from '../../lib/supabase';
 
+const VALID_TYPES = new Set(['movie', 'tv']);
+
+function isValidId(v: unknown): v is number {
+  return typeof v === 'number' && Number.isInteger(v) && v > 0;
+}
+
+function isValidTmdbId(v: unknown): boolean {
+  if (typeof v === 'number') return Number.isInteger(v) && v > 0;
+  if (typeof v === 'string') return /^\d+$/.test(v) && Number(v) > 0;
+  return false;
+}
+
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { tmdb_id, type } = await request.json();
-    if (!tmdb_id || !type) return json({ error: 'tmdb_id and type are required' }, 400);
+    const body = await request.json();
+    const { tmdb_id, type } = body ?? {};
+    if (!isValidTmdbId(tmdb_id)) return json({ error: 'tmdb_id must be a positive integer' }, 400);
+    if (!VALID_TYPES.has(type)) return json({ error: 'type must be "movie" or "tv"' }, 400);
     const data = await addCarouselItem(tmdb_id, type);
     return json(data, 201);
   } catch (e: any) {
@@ -18,8 +32,11 @@ export const POST: APIRoute = async ({ request }) => {
 
 export const PATCH: APIRoute = async ({ request }) => {
   try {
-    const { id, tmdb_id, type } = await request.json();
-    if (!id || !tmdb_id || !type) return json({ error: 'id, tmdb_id, and type are required' }, 400);
+    const body = await request.json();
+    const { id, tmdb_id, type } = body ?? {};
+    if (!isValidId(id)) return json({ error: 'id must be a positive integer' }, 400);
+    if (!isValidTmdbId(tmdb_id)) return json({ error: 'tmdb_id must be a positive integer' }, 400);
+    if (!VALID_TYPES.has(type)) return json({ error: 'type must be "movie" or "tv"' }, 400);
     const data = await updateCarouselItem(id, tmdb_id, type);
     return json(data, 200);
   } catch (e: any) {
@@ -29,8 +46,9 @@ export const PATCH: APIRoute = async ({ request }) => {
 
 export const DELETE: APIRoute = async ({ request }) => {
   try {
-    const { id } = await request.json();
-    if (!id) return json({ error: 'id is required' }, 400);
+    const body = await request.json();
+    const { id } = body ?? {};
+    if (!isValidId(id)) return json({ error: 'id must be a positive integer' }, 400);
     await deleteCarouselItem(id);
     return json({ success: true }, 200);
   } catch (e: any) {

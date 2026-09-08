@@ -2,8 +2,8 @@ import type { APIRoute } from 'astro';
 import { searchMulti } from '../../lib/tmdb';
 
 export const GET: APIRoute = async ({ url }) => {
-  const query = url.searchParams.get('q') ?? '';
-  if (!query.trim()) {
+  const query = (url.searchParams.get('q') ?? '').trim().slice(0, 200);
+  if (!query) {
     return new Response(JSON.stringify({ results: [] }), {
       headers: { 'Content-Type': 'application/json' },
     });
@@ -12,7 +12,7 @@ export const GET: APIRoute = async ({ url }) => {
     const data = await searchMulti(query);
     // Keep only movie/tv results with a poster
     const filtered = data.results.filter(
-      (r) => (r.media_type === 'movie' || r.media_type === 'tv')
+      (r) => (r.media_type === 'movie' || r.media_type === 'tv') && r.poster_path
     );
     return new Response(JSON.stringify({ results: filtered }), {
       headers: { 'Content-Type': 'application/json' },

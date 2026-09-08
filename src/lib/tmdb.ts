@@ -20,14 +20,51 @@ export interface TmdbSearchResult {
   total_pages: number;
 }
 
-function tmdbFetch<T>(path: string): Promise<T> {
-  const sep = path.includes('?') ? '&' : '?';
-  return fetch(`${TMDB_BASE}${path}${sep}api_key=${TMDB_API_KEY}`)
-    .then((r) => {
-      if (!r.ok) throw new Error(`TMDB ${r.status}`);
-      return r.json() as Promise<T>;
-    });
+// ── In-process TTL cache ─────────────────────────────────────────────────────
+// Avoids redundant TMDB fetches across page renders within the same process.
+// TTL: 10 minutes — short enough for fresh data, long enough to avoid hammering
+// the API on every request.
+
+const TTL_MS = 10 * 60 * 1000;
+
+interface CacheEntry<T> {
+  value: T;
+  expiresAt: number;
 }
+
+const cache = new Map<string, CacheEntry<unknown>>();
+
+function cacheGet<T>(key: string): T | undefined {
+  const entry = cache.get(key) as CacheEntry<T> | undefined;
+  if (!entry) return undefined;
+  if (Date.now() > entry.expiresAt) {
+    cache.delete(key);
+    return undefined;
+  }
+  return entry.value;
+}
+
+function cacheSet<T>(key: string, value: T): void {
+  cache.set(key, { value, expiresAt: Date.now() + TTL_MS });
+}
+
+// ── TMDB fetch helper ────────────────────────────────────────────────────────
+
+async function tmdbFetch<T>(path: string): Promise<T> {
+  const sep = path.includes('?') ? '&' : '?';
+  const url = `${TMDB_BASE}${path}${sep}api_key=${TMDB_API_KEY}`;
+
+  const cached = cacheGet<T>(url);
+  if (cached !== undefined) return cached;
+
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`TMDB ${r.status}: ${r.statusText}`);
+  const data = await r.json() as T;
+  cacheSet(url, data);
+  return data;
+}
+
+// ── Public API ───────────────────────────────────────────────────────────────
 
 export function getMovieDetails(id: number | string): Promise<TmdbMedia> {
   return tmdbFetch<TmdbMedia>(`/movie/${id}`);
@@ -59,7 +96,8 @@ export function displayYear(item: TmdbMedia): string {
 
 /**
  * Enriches an array of Supabase items with TMDB metadata.
- * Gracefully falls back to null for failed lookups.
+ * All requests are fired concurrently. Failed lookups fall back to null.
+ * Results are cached per TMDB ID+type for TTL_MS milliseconds.
  */
 export async function enrichItems(
   items: Array<{ tmdb_id: string | number; type: 'movie' | 'tv' }>

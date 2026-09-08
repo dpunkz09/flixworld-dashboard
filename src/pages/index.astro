@@ -1,18 +1,21 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getCarouselItems, getNetflixTopItems } from '../lib/supabase';
+import { getCarouselItems, getNetflixTopItems, getNetflixTopShowItems } from '../lib/supabase';
 
 let carouselCount = 0;
-let netflixCount = 0;
+let netflixMovieCount = 0;
+let netflixShowCount = 0;
 let error = '';
 
 try {
-  const [carousel, netflix] = await Promise.all([
+  const [carousel, netflixMovies, netflixShows] = await Promise.all([
     getCarouselItems(),
     getNetflixTopItems(),
+    getNetflixTopShowItems(),
   ]);
   carouselCount = carousel.length;
-  netflixCount = netflix.length;
+  netflixMovieCount = netflixMovies.length;
+  netflixShowCount = netflixShows.length;
 } catch (e: any) {
   error = e.message;
 }
@@ -20,42 +23,75 @@ try {
 
 <Layout title="Dashboard">
   {error && (
-    <div class="mb-6 rounded-lg bg-red-900/40 border border-red-700 px-4 py-3 text-red-300 text-sm">
-      ⚠️ Failed to load data: {error}
+    <div class="mb-6 rounded-lg bg-red-900/40 border border-red-700 px-4 py-3 text-red-300 text-sm flex items-center gap-2">
+      <span class="material-icons text-red-400" style="font-size:18px">warning</span>
+      Failed to load data: {error}
     </div>
   )}
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl">
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
     <!-- Carousel card -->
-    <a href="/carousel" class="group block rounded-xl bg-gray-900 border border-gray-800 hover:border-indigo-500 transition-colors p-6">
+    <a href="/carousel" class="group block rounded-xl bg-gray-900 border border-gray-800 hover:border-indigo-500 active:border-indigo-500 transition-colors p-5">
       <div class="flex items-center justify-between mb-4">
-        <div class="text-3xl">🎠</div>
+        <span class="material-icons text-indigo-400" style="font-size:32px">view_carousel</span>
         <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Manage</span>
       </div>
       <p class="text-4xl font-bold text-white mb-1">{carouselCount}</p>
       <p class="text-sm text-gray-400">Carousel Items</p>
-      <p class="text-xs text-indigo-400 mt-3 group-hover:text-indigo-300">View & edit →</p>
+      <p class="text-xs text-indigo-400 mt-3 group-hover:text-indigo-300 flex items-center gap-1">
+        View &amp; edit
+        <span class="material-icons" style="font-size:14px">arrow_forward</span>
+      </p>
     </a>
 
-    <!-- Netflix Top card -->
-    <a href="/netflix-top" class="group block rounded-xl bg-gray-900 border border-gray-800 hover:border-red-500 transition-colors p-6">
+    <!-- Netflix Top Movies card -->
+    <a href="/netflix-top" class="group block rounded-xl bg-gray-900 border border-gray-800 hover:border-red-500 active:border-red-500 transition-colors p-5">
       <div class="flex items-center justify-between mb-4">
-        <div class="text-3xl">🔥</div>
+        <span class="material-icons text-red-400" style="font-size:32px">local_fire_department</span>
         <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Manage</span>
       </div>
-      <p class="text-4xl font-bold text-white mb-1">{netflixCount}</p>
-      <p class="text-sm text-gray-400">Netflix Top Items</p>
-      <p class="text-xs text-red-400 mt-3 group-hover:text-red-300">View & edit →</p>
+      <p class="text-4xl font-bold text-white mb-1">{netflixMovieCount}</p>
+      <p class="text-sm text-gray-400">Netflix Top Movies</p>
+      <p class="text-xs text-red-400 mt-3 group-hover:text-red-300 flex items-center gap-1">
+        View &amp; edit
+        <span class="material-icons" style="font-size:14px">arrow_forward</span>
+      </p>
+    </a>
+
+    <!-- Netflix Top Shows card -->
+    <a href="/netflix-top-show" class="group block rounded-xl bg-gray-900 border border-gray-800 hover:border-emerald-500 active:border-emerald-500 transition-colors p-5">
+      <div class="flex items-center justify-between mb-4">
+        <span class="material-icons text-emerald-400" style="font-size:32px">tv</span>
+        <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Manage</span>
+      </div>
+      <p class="text-4xl font-bold text-white mb-1">{netflixShowCount}</p>
+      <p class="text-sm text-gray-400">Netflix Top Shows</p>
+      <p class="text-xs text-emerald-400 mt-3 group-hover:text-emerald-300 flex items-center gap-1">
+        View &amp; edit
+        <span class="material-icons" style="font-size:14px">arrow_forward</span>
+      </p>
     </a>
   </div>
 
-  <div class="mt-10 rounded-xl bg-gray-900 border border-gray-800 p-6 max-w-2xl">
+  <div class="mt-6 rounded-xl bg-gray-900 border border-gray-800 p-5">
     <h2 class="text-sm font-semibold text-gray-300 mb-3">Quick tips</h2>
     <ul class="space-y-2 text-sm text-gray-500">
-      <li>• Click <span class="text-gray-300">Carousel</span> or <span class="text-gray-300">Netflix Top</span> in the sidebar to manage items.</li>
-      <li>• Use the <span class="text-gray-300">Search TMDB</span> button to find movies/shows by title and add them instantly.</li>
-      <li>• Click the <span class="text-gray-300">Replace</span> button on any item to swap it with a different TMDB title.</li>
-      <li>• All changes are saved directly to Supabase in real time.</li>
+      <li class="flex items-start gap-2">
+        <span class="material-icons text-gray-600 shrink-0" style="font-size:16px;margin-top:1px">touch_app</span>
+        Tap <span class="text-gray-300 mx-1">Carousel</span>, <span class="text-gray-300 mx-1">Movies</span>, or <span class="text-gray-300 mx-1">Shows</span> in the bottom nav to manage items.
+      </li>
+      <li class="flex items-start gap-2">
+        <span class="material-icons text-gray-600 shrink-0" style="font-size:16px;margin-top:1px">search</span>
+        Use <span class="text-gray-300 mx-1">Add Item</span> to find movies &amp; shows via TMDB search.
+      </li>
+      <li class="flex items-start gap-2">
+        <span class="material-icons text-gray-600 shrink-0" style="font-size:16px;margin-top:1px">swap_horiz</span>
+        Tap the <span class="text-gray-300 mx-1">Replace</span> button on any item to swap it with a different title.
+      </li>
+      <li class="flex items-start gap-2">
+        <span class="material-icons text-gray-600 shrink-0" style="font-size:16px;margin-top:1px">cloud_done</span>
+        All changes are saved directly to Supabase in real time.
+      </li>
     </ul>
   </div>
 </Layout>

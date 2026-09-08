@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getCarouselItems } from '../lib/supabase';
+import { getNetflixTopShowItems } from '../lib/supabase';
 import { enrichItems, posterUrl, displayTitle, displayYear } from '../lib/tmdb';
 import type { SupabaseItem } from '../lib/supabase';
 import type { TmdbMedia } from '../lib/tmdb';
@@ -10,14 +10,14 @@ let enriched: (TmdbMedia | null)[] = [];
 let error = '';
 
 try {
-  items = await getCarouselItems();
+  items = await getNetflixTopShowItems();
   enriched = await enrichItems(items);
 } catch (e: any) {
   error = e.message;
 }
 ---
 
-<Layout title="Carousel Items">
+<Layout title="Netflix Top Shows">
   {error && (
     <div class="mb-6 rounded-lg bg-red-900/40 border border-red-700 px-4 py-3 text-red-300 text-sm flex items-center gap-2">
       <span class="material-icons text-red-400" style="font-size:18px">warning</span>
@@ -27,23 +27,24 @@ try {
 
   <!-- Toolbar -->
   <div class="flex items-center justify-between mb-5">
-    <p class="text-sm text-gray-400">{items.length} item{items.length !== 1 ? 's' : ''} in carousel</p>
+    <p class="text-sm text-gray-400">{items.length} item{items.length !== 1 ? 's' : ''} in Netflix Top Shows</p>
     <button
       id="add-btn"
-      class="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+      class="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
     >
       <span class="material-icons" style="font-size:18px">add</span>
       Add Item
     </button>
   </div>
 
-  <!-- List -->
+  <!-- Ranked list -->
   <div id="items-grid" class="flex flex-col divide-y divide-gray-800 rounded-xl border border-gray-800 overflow-hidden">
     {items.map((item, i) => {
       const meta = enriched[i];
       const title = meta ? displayTitle(meta) : `TMDB #${item.tmdb_id}`;
       const year = meta ? displayYear(meta) : '—';
       const poster = meta ? posterUrl(meta.poster_path) : '/placeholder-poster.svg';
+      const rank = i + 1;
       return (
         <div
           class="media-card flex items-center gap-3 px-3 py-2.5 bg-gray-900 hover:bg-gray-800/60 transition-colors"
@@ -51,6 +52,8 @@ try {
           data-tmdb-id={item.tmdb_id}
           data-type={item.type}
         >
+          <!-- Rank -->
+          <span class="w-6 text-center text-sm font-black text-gray-500 shrink-0">{rank}</span>
           <!-- Thumbnail -->
           <img
             src={poster}
@@ -71,7 +74,7 @@ try {
           <!-- Actions -->
           <div class="flex items-center gap-1 shrink-0">
             <button
-              class="replace-btn flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-400 hover:bg-indigo-600 hover:text-white active:bg-indigo-700 transition-colors"
+              class="replace-btn flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-400 hover:bg-emerald-600 hover:text-white active:bg-emerald-700 transition-colors"
               data-id={item.id}
               data-tmdb-id={item.tmdb_id}
               data-type={item.type}
@@ -81,7 +84,7 @@ try {
               <span class="hidden sm:inline">Replace</span>
             </button>
             <button
-              class="delete-btn flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-400 hover:bg-red-600 hover:text-white active:bg-red-700 transition-colors"
+              class="delete-btn flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:bg-gray-700 hover:text-white active:bg-gray-600 transition-colors"
               data-id={item.id}
               aria-label="Delete"
             >
@@ -97,8 +100,8 @@ try {
   <!-- Empty state -->
   {items.length === 0 && !error && (
     <div class="flex flex-col items-center justify-center py-24 text-gray-600">
-      <span class="material-icons text-gray-700 mb-4" style="font-size:56px">view_carousel</span>
-      <p class="text-lg">No carousel items yet</p>
+      <span class="material-icons text-gray-700 mb-4" style="font-size:56px">tv</span>
+      <p class="text-lg">No Netflix Top Shows yet</p>
       <p class="text-sm mt-1">Tap <strong class="text-gray-400">Add Item</strong> to get started</p>
     </div>
   )}
@@ -109,7 +112,7 @@ try {
   <div id="search-modal" class="modal-backdrop hidden fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="modal-box bg-gray-900 border border-gray-700 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-2xl shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[90vh]">
       <div class="flex items-center justify-between px-5 py-4 border-b border-gray-800">
-        <h2 class="text-base font-semibold text-white" id="modal-title">Add Carousel Item</h2>
+        <h2 class="text-base font-semibold text-white" id="modal-title">Add Netflix Top Show</h2>
         <button id="close-modal" class="text-gray-500 hover:text-white flex items-center">
           <span class="material-icons" style="font-size:20px">close</span>
         </button>
@@ -121,9 +124,9 @@ try {
             id="search-input"
             type="text"
             placeholder="Search movies & TV shows…"
-            class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+            class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
           />
-          <button id="search-btn" class="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
+          <button id="search-btn" class="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
             <span class="material-icons" style="font-size:18px">search</span>
             <span class="hidden sm:inline">Search</span>
           </button>
@@ -146,7 +149,7 @@ try {
         <span class="material-icons text-red-400" style="font-size:20px">delete_forever</span>
         <h2 class="text-base font-semibold text-white">Delete item?</h2>
       </div>
-      <p class="text-sm text-gray-400 mb-6">This will remove the item from the carousel. This action cannot be undone.</p>
+      <p class="text-sm text-gray-400 mb-6">This will remove the item from Netflix Top Shows. This action cannot be undone.</p>
       <div class="flex gap-3">
         <button id="confirm-delete" class="flex-1 bg-red-600 hover:bg-red-500 text-white text-sm font-medium py-2.5 rounded-lg transition-colors">Delete</button>
         <button id="cancel-delete" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium py-2.5 rounded-lg transition-colors">Cancel</button>
@@ -156,15 +159,13 @@ try {
 </Layout>
 
 <script>
-  const API = '/api/carousel';
+  const API = '/api/netflix-top-show';
   const TMDB_SEARCH = '/api/tmdb-search';
   const IMG_BASE = 'https://image.tmdb.org/t/p/w92';
 
-  // ── State ────────────────────────────────────────────────────────────────
   let pendingDeleteId: number | null = null;
-  let editingId: number | null = null; // null = add mode, number = replace mode
+  let editingId: number | null = null;
 
-  // ── Elements ─────────────────────────────────────────────────────────────
   const searchModal = document.getElementById('search-modal')!;
   const deleteModal = document.getElementById('delete-modal')!;
   const addBtn = document.getElementById('add-btn')!;
@@ -177,10 +178,9 @@ try {
   const searchStatus = document.getElementById('search-status')!;
   const modalTitle = document.getElementById('modal-title')!;
 
-  // ── Open / close ─────────────────────────────────────────────────────────
   function openSearchModal(replacing: boolean, id?: number) {
     editingId = replacing ? (id ?? null) : null;
-    modalTitle.textContent = replacing ? 'Replace Item' : 'Add Carousel Item';
+    modalTitle.textContent = replacing ? 'Replace Item' : 'Add Netflix Top Show';
     searchInput.value = '';
     searchResults.innerHTML = '';
     searchStatus.textContent = '';
@@ -199,7 +199,6 @@ try {
     if (e.target === searchModal) closeSearchModal();
   });
 
-  // ── TMDB Search ───────────────────────────────────────────────────────────
   async function doSearch() {
     const q = searchInput.value.trim();
     if (!q) return;
@@ -253,7 +252,6 @@ try {
     if (e.key === 'Enter') doSearch();
   });
 
-  // ── Save (add or replace) ─────────────────────────────────────────────────
   async function saveItem(tmdb_id: string, type: 'movie' | 'tv') {
     try {
       if (editingId !== null) {
@@ -276,7 +274,6 @@ try {
     }
   }
 
-  // ── Delete ────────────────────────────────────────────────────────────────
   function openDeleteModal(id: number) {
     pendingDeleteId = id;
     deleteModal.classList.remove('hidden');
@@ -309,7 +306,6 @@ try {
     }
   });
 
-  // ── Wire up card buttons ───────────────────────────────────────────────────
   document.querySelectorAll<HTMLButtonElement>('.replace-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       const id = Number(btn.dataset.id);
