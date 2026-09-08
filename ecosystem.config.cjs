@@ -21,7 +21,7 @@ module.exports = {
       env_production: {
         NODE_ENV: 'production',
         HOST: '127.0.0.1',
-        PORT: 4232,
+        PORT: 2332,
         // SUPABASE_URL, SUPABASE_ANON_KEY, TMDB_API_KEY must be set
         // in the server environment before starting the process.
         // e.g. export SUPABASE_URL=... before calling pm2 start, or use
